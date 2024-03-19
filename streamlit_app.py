@@ -20,7 +20,7 @@ def connect_to_bigquery():
 
 def stream_to_bigquery(data):
     client = connect_to_bigquery()
-    table_id = 'shaped-faculty-372218.streamer_data.streamlit_data'
+    table_id = 'shaped-faculty-372218.streamer_data.streamlit_wip'
 
     data['stream_datetime'] = data['stream_datetime'].strftime('%Y-%m-%d')
 
