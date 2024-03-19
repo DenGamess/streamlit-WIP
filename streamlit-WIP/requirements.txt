@@ -1,5 +1,0 @@
-altair
-pandas
-streamlit
-google-cloud-bigquery
-db-dtypes
