@@ -4,7 +4,6 @@ import os
 from PIL import Image
 import io
 
-# Setup Google Cloud BigQuery Client
 def authenticate_bigquery():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     key_file_path = os.path.join(current_dir, 'shaped-faculty-372218-840d45f07bdf.json')
@@ -14,8 +13,6 @@ def connect_to_bigquery():
     authenticate_bigquery()
     return bigquery.Client()
 
-# Fetch submissions, caching results for performance
-@st.cache(ttl=300, allow_output_mutation=True)  # Cache for 5 minutes
 def fetch_submissions():
     client = connect_to_bigquery()
     query = """
@@ -30,15 +27,10 @@ def fetch_submissions():
             results[col] = results[col].astype(str)
     return results
 
-# Display submission details and screenshot
-def display_submission(submission, is_verified):
+def display_submission(submission):
     col1, col2 = st.columns([2, 1])
     with col1:
-        # Use the session state to determine if the submission has been verified
-        if is_verified or submission['submission_id'] in st.session_state.get('verified_submissions', []):
-            st.markdown(f"### ✅ Verified Submission {submission['submission_id']}")
-        else:
-            st.markdown(f"### Submission {submission['submission_id']}")
+        st.markdown(f"### Submission {submission['submission_id']}")
         details = submission.drop(['screenshot', 'submission_id'], errors='ignore')
         st.dataframe(details)
     with col2:
@@ -49,7 +41,6 @@ def display_submission(submission, is_verified):
         else:
             st.error("No screenshot available.")
 
-# Verify or reject submission
 def verify_submission(submission_id, verified):
     client = connect_to_bigquery()
     query = f"""
@@ -61,30 +52,26 @@ def verify_submission(submission_id, verified):
     query_job.result()
     if query_job.errors is None:
         st.success(f'Submission {"verified" if verified else "rejected"} successfully!')
-        # Update session state to include this submission ID as verified
-        if verified:
-            verified_submissions = st.session_state.get('verified_submissions', [])
-            verified_submissions.append(submission_id)
-            st.session_state['verified_submissions'] = verified_submissions
     else:
         st.error(f'Error verifying submission: {query_job.errors}')
 
-# Main function to orchestrate the app
 def main():
     st.title('Submission Verification')
+
+    if st.button('Refresh Submissions'):
+        st.experimental_rerun()
 
     submissions = fetch_submissions()
 
     for index, submission in submissions.iterrows():
-        # Check if the current submission is marked as verified in the session state
-        is_verified = submission['submission_id'] in st.session_state.get('verified_submissions', [])
-
         with st.expander(f"Submission {index + 1}", expanded=True):
-            display_submission(submission, is_verified)
+            display_submission(submission)
             if st.button('Verify', key=f'verify_{index}'):
                 verify_submission(submission['submission_id'], verified=True)
+                st.experimental_rerun()  # Refresh submissions after a change
             if st.button('Reject', key=f'reject_{index}'):
                 verify_submission(submission['submission_id'], verified=False)
+                st.experimental_rerun()  # Refresh submissions after a change
 
 if __name__ == "__main__":
     main()
