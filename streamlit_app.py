@@ -51,6 +51,30 @@ def verify_submission(submission_id, verified):
         st.error(f'Error verifying submission: {query_job.errors}')
 
 def main():
+    # Set page configuration
+    st.beta_set_page_config(page_title="Submission Verification", page_icon="📸", layout="wide", initial_sidebar_state="expanded")
+    
+    # Set CSS for custom styles
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            color: orange;
+            text-align: center;
+        }
+        .stMarkdown {
+            color: orange;
+            text-align: center;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Add logo
+    logo_image = Image.open("your_logo.png")
+    st.image(logo_image, use_column_width=True)
+
     st.title('Submission Verification')
     submissions = fetch_submissions()
     for index, submission in submissions.iterrows():
