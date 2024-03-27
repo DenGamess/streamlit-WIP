@@ -15,7 +15,11 @@ def connect_to_bigquery():
 
 def fetch_submissions():
     client = connect_to_bigquery()
-    query = "SELECT * FROM `shaped-faculty-372218.streamer_data.streamlit_data`"
+    query = """
+    SELECT *
+    FROM `shaped-faculty-372218.streamer_data.streamlit_data`
+    WHERE is_verified = FALSE
+    """
     query_job = client.query(query)
     results = query_job.to_dataframe()
     for col in results.columns:
